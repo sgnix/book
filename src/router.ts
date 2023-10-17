@@ -1,15 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Login from './components/Login.vue';
+import { createRouter, createWebHistory } from "vue-router";
 
-// Define route components
 const routes = [
-  { path: '/login', component: Login },
+  { path: "/", redirect: "/login" },
+  { path: "/login", component: () => import("./components/LogIn.vue") },
+  { path: "/signup", component: () => import("./components/SignUp.vue") },
 ];
 
-// Create the router instance
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  linkActiveClass: "text-blue-500",
+  linkExactActiveClass: "text-blue-700",
 });
 
 export default router;
