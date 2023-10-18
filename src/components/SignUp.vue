@@ -5,9 +5,9 @@
 
       <!-- Step 1: Username & Password -->
       <div v-if="step === 1">
-        <form>
+        <form @submit="validate">
           <!-- Username -->
-          <FormElement for="username" label="Username">
+          <FormElement inputId="username" label="Username">
             <input
               v-model="username"
               type="text"
@@ -18,7 +18,7 @@
           </FormElement>
 
           <!-- Password -->
-          <FormElement for="password" label="Password">
+          <FormElement inputId="password" label="Password">
             <input
               v-model="password"
               type="password"
@@ -29,7 +29,7 @@
           </FormElement>
 
           <!-- Password again -->
-          <FormElement for="password2" label="Password again">
+          <FormElement inputId="password2" label="Password again">
             <input
               v-model="password2"
               type="password"
@@ -42,7 +42,6 @@
           <div v-if="error" class="text-red-500 text-sm mb-2">{{ error }}</div>
 
           <button
-            @click="validate"
             class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md"
           >
             Next
@@ -55,42 +54,37 @@
 
       <!-- Step 2: Favorite Book -->
       <div v-if="step === 2">
-        <div class="mb-4">
-          <label for="book" class="block text-sm font-medium text-gray-600 mb-2"
-            >Favorite Book:</label
+        <form @submit="completeSignup">
+          <div class="mb-4">
+            <SignUpBookSelector @selectBook="handleSelectBook" />
+          </div>
+          <button
+            class="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded-md"
           >
-          <select
-            v-model="favoriteBook"
-            id="book"
-            class="p-2 w-full border rounded-md"
-          >
-            <option v-for="book in books" :key="book" :value="book">
-              {{ book }}
-            </option>
-          </select>
-        </div>
-        <button
-          @click="completeSignup"
-          class="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded-md"
-        >
-          Complete Signup
-        </button>
+            Complete Signup
+          </button>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { AxiosError } from "axios";
 import Link from "../atoms/Link.vue";
 import FormElement from "../atoms/FormElement.vue";
+import SignUpBookSelector from "./SignUpBookSelector.vue";
 import { ref } from "vue";
-import apiService from "../models/service";
+import { UserService } from "../services/user.service";
+import { validateUsername, validatePassword } from "../utils/validators";
+import { useRouter } from "vue-router";
 
 export default {
   name: "SignUp",
   components: {
     Link,
     FormElement,
+    SignUpBookSelector,
   },
   setup() {
     const step = ref(1);
@@ -100,25 +94,16 @@ export default {
     const error = ref<string>();
     const favoriteBook = ref("");
     const books = ["Book A", "Book B", "Book C", "Book D"];
+    const userService = new UserService();
+    const router = useRouter();
 
-    const validate = () => {
-      // validate that the username contains only letters and numbers
-      const usernameRegex = /^[a-zA-Z0-9]+$/;
-      if (!usernameRegex.test(username.value)) {
-        error.value = "Username must contain only letters and numbers!";
-        return;
-      }
+    const validate = async (e: Event) => {
+      e.preventDefault();
+      error.value = undefined;
 
-      // validate that the password is at least 8 characters long
-      // and that it contains at least one number and special character
-      if (password.value.length < 8) {
-        error.value = "Password must be at least 8 characters long!";
-        return;
-      }
-      const passwordRegex = /(?=.*[0-9])(?=.*[!@#$%^&*])/;
-      if (!passwordRegex.test(password.value)) {
-        error.value =
-          "Password must contain at least one number and special character!";
+      // validate all fields required
+      if (!username.value || !password.value || !password2.value) {
+        error.value = "All fields are required!";
         return;
       }
 
@@ -128,15 +113,36 @@ export default {
         return false;
       }
 
+      const usernameError = validateUsername(username.value);
+      if (usernameError !== null) {
+        error.value = usernameError;
+        return;
+      }
+
+      const passwordError = validatePassword(password.value);
+      if (passwordError !== null) {
+        error.value = passwordError;
+        return;
+      }
+
+      try {
+        const request = { username: username.value, password: password.value };
+        await userService.createUser(request);
+      } catch (e) {
+        error.value = (e as AxiosError).message;
+        return;
+      }
+
       step.value = 2;
     };
 
-    const completeSignup = () => {
-      console.log("Signup Details:", {
-        username: username.value,
-        password: password.value,
-        favoriteBook: favoriteBook.value,
-      });
+    const handleSelectBook = (bookId: string) => {
+      userService.setFavoriteBook(username.value, bookId);
+    };
+
+    const completeSignup = (e: Event) => {
+      e.preventDefault();
+      router.push(`/dashboard/${username.value}`);
     };
 
     return {
@@ -149,6 +155,7 @@ export default {
       completeSignup,
       validate,
       error,
+      handleSelectBook,
     };
   },
 };

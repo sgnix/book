@@ -1,18 +1,9 @@
 <template>
   <header class="p-6 bg-white shadow-md">
     <nav>
-      <ul class="flex justify-start text-lg">
+      <ul class="flex justify-end text-lg">
         <li class="hover:text-blue-500 cursor-pointer px-4">
-          <router-link to="/">Books</router-link>
-        </li>
-        <li class="hover:text-blue-500 cursor-pointer px-4">
-          <router-link to="/favs">Favorites</router-link>
-        </li>
-        <li class="hover:text-blue-500 cursor-pointer px-4">
-          <router-link to="/login">Login</router-link>
-        </li>
-        <li class="hover:text-blue-500 cursor-pointer px-4">
-          <router-link to="/logout">Logout</router-link>
+          <router-link to="/login">Logout</router-link>
         </li>
       </ul>
     </nav>

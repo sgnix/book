@@ -21,7 +21,7 @@ export default {
   },
   setup() {
     const url = ref<string>();
-    return {url};
+    return { url };
   },
 };
 </script>

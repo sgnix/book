@@ -1,19 +1,21 @@
 <template>
   <div class="mb-4">
-    <label :for="for" class="block text-sm font-medium text-gray-600 mb-2">{{
-      label
-    }}</label>
+    <label
+      :for="inputId"
+      class="block text-sm font-medium text-gray-600 mb-2"
+      >{{ label }}</label
+    >
     <slot></slot>
   </div>
 </template>
 
 <script lang="ts">
-import { defineProps } from "vue";
+import { PropType } from "vue";
 
 export default {
   name: "FormElement",
   props: {
-    for: {
+    inputId: {
       type: String as PropType<string>,
       required: true,
     },
